@@ -2,9 +2,12 @@ import { Controller, Param, Get, Post, Body, Patch, Delete, ParseIntPipe, UseGua
 import { UserService } from './user.service';
 import { User } from './user.entity';
 import { AuthGuard } from '@nestjs/passport';
+import { RoleGuard } from '../role/guards/role.guard';
+import { Roles } from '../role/decorator/role.decorator';
 
 @Controller('users')
-@UseGuards(AuthGuard())
+@Roles('ADMIN', 'AUTHOR')
+@UseGuards(AuthGuard(), RoleGuard)
 export class UserController {
     constructor(
         private readonly _userService: UserService
