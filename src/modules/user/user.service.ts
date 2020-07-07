@@ -1,13 +1,11 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserDto } from './dto/user.dto';
 import { User } from './user.entity';
-import { UserDetail } from './user.detail.entity';
-import { getConnection } from 'typeorm';
-import { Role } from '../role/role.entity';
 import { RoleRepository } from '../role/role.repository';
 import { status } from "../../shared/entity-status.num";
+import { ReadUserDto, ReadUserDetailDto, UpdateUserDto } from './dto';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class UserService {
@@ -18,13 +16,14 @@ export class UserService {
         private readonly _roleRepository: RoleRepository
     ){}
 
-    async get(id: number): Promise<User>{
+    /* ------------------------------------------------------------------------------- */
+    async get(userId: number): Promise<ReadUserDto>{
 
-        if(!id){
+        if(!userId){
             throw new BadRequestException("El id no ha sido enviado")
         }
 
-        const user = await this._userRepository.findOne(id, {
+        const user = await this._userRepository.findOne(userId, {
             where: {status: status.ACTIVE}
         })
 
@@ -32,36 +31,37 @@ export class UserService {
             throw new NotFoundException()
         }
 
-        return user
+        return plainToClass(ReadUserDto, user)
     }
 
-    async getAll(): Promise<User[]>{
+    /* ------------------------------------------------------------------------------- */
+    async getAll(): Promise<ReadUserDto[]>{
 
         const users: User[] = await this._userRepository.find({
             where: {status: status.ACTIVE}
         })
 
-        return users
+        return users.map((user: User)=> plainToClass(ReadUserDto, user))
     }
 
-    async create(user: User): Promise<User>{
-        /* ------------------------------------------------------ */
-        const details = new UserDetail()
-        user.details = details
-        const repo = await getConnection().getRepository(Role)
-        const defaultRole = await repo.findOne({where: {name: 'GENERAL'}})
-        user.roles = [defaultRole]
-        /* ------------------------------------------------------ */
-        const savedUser: User = await this._userRepository.save(user)
-        return savedUser
+    /* ------------------------------------------------------------------------------- */
+    async update(userId: number, user: UpdateUserDto): Promise<ReadUserDto>{
+        const foundUser = await this._userRepository.findOne(userId, {
+            where: {status: 'ACTIVE'}
+        })
+
+        if(!foundUser){
+            throw new NotFoundException('El usuario no existe')
+        }
+
+        foundUser.username = user.username
+        const updateUser = await this._userRepository.save(foundUser)
+        return plainToClass(ReadUserDto, updateUser)
     }
 
-    async update(id: number, user: User): Promise<void>{
-        await this._userRepository.update(id, user)
-    }
-
-    async delete(id: number): Promise<void>{
-        const userExist = await this._userRepository.findOne(id, {
+    /* ------------------------------------------------------------------------------- */
+    async delete(userId: number): Promise<void>{
+        const userExist = await this._userRepository.findOne(userId, {
             where: {status: status.ACTIVE}
         })
 
@@ -69,10 +69,11 @@ export class UserService {
             throw new NotFoundException()
         }
 
-        await this._userRepository.update(id, {status: 'INACTIVE'})
+        await this._userRepository.update(userId, {status: 'INACTIVE'})
     }
 
-    async setRoleToUser(userId: number, roleId: number){
+    /* ------------------------------------------------------------------------------- */
+    async setRoleToUser(userId: number, roleId: number): Promise<boolean>{
         const userExist = await this._userRepository.findOne(userId, {
             where: {status: status.ACTIVE}
         })
