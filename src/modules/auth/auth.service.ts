@@ -2,11 +2,12 @@ import { Injectable, ConflictException, NotFoundException, UnauthorizedException
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthRepository } from './auth.repository';
 import { JwtService } from '@nestjs/jwt';
-import { SignupDto, SigninDto } from './dto';
+import { SignupDto, SigninDto, LoggedInDto } from './dto';
 import { User } from '../user/user.entity';
 import { compare } from 'bcryptjs';
 import { IJwtPayload } from './jwt-payload.interface';
 import { RoleType } from '../role/roletype.enum';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class AuthService {
@@ -15,7 +16,7 @@ export class AuthService {
         private readonly _authRepository: AuthRepository,
         private readonly _jwtService: JwtService
     ){}
-
+    /* ------------------------------------------------------------------------------- */
     async signup(signupDto: SignupDto): Promise <void>{
         const {username, email}= signupDto
         const userExists = await this._authRepository.findOne({
@@ -29,7 +30,8 @@ export class AuthService {
         return this._authRepository.signup(signupDto)
     }
 
-    async signin(signinDto: SigninDto): Promise<{token: string}>{
+    /* ------------------------------------------------------------------------------- */
+    async signin(signinDto: SigninDto): Promise<LoggedInDto>{
         const {username, password} = signinDto
 
         const user: User = await this._authRepository.findOne({
@@ -37,13 +39,13 @@ export class AuthService {
         })
 
         if (!user){
-            throw new NotFoundException('El usuario no existe')
+            throw new NotFoundException('El usuario no exite')
         }
 
         const isMatch = await compare(password, user.password)
 
         if(!isMatch){
-            throw new UnauthorizedException('Credenciales invalidas')
+            throw new UnauthorizedException('Usuario y/o contraseña incorrectos')
         }
 
         const payload: IJwtPayload = {
@@ -53,7 +55,7 @@ export class AuthService {
             roles: user.roles.map(r => r.name as RoleType)
         }
         
-        const token = await this._jwtService.sign(payload)
-        return {token}
+        const token = this._jwtService.sign(payload)
+        return plainToClass(LoggedInDto, {token, user})
     }
 }

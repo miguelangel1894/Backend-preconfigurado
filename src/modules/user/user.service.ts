@@ -4,8 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { RoleRepository } from '../role/role.repository';
 import { status } from "../../shared/entity-status.num";
-import { ReadUserDto, ReadUserDetailDto, UpdateUserDto } from './dto';
+import { ReadUserDto,  UpdateUserDto } from './dto';
 import { plainToClass } from 'class-transformer';
+
+import { UserDetail } from './user.detail.entity';
+import { UserDetailRepository } from './user_details.repository';
 
 @Injectable()
 export class UserService {
@@ -13,7 +16,9 @@ export class UserService {
         @InjectRepository(UserRepository)
         private readonly _userRepository: UserRepository,
         @InjectRepository(RoleRepository)
-        private readonly _roleRepository: RoleRepository
+        private readonly _roleRepository: RoleRepository,
+        @InjectRepository(UserDetailRepository)
+        private readonly _userDetailRepository: UserDetailRepository,
     ){}
 
     /* ------------------------------------------------------------------------------- */
@@ -55,7 +60,11 @@ export class UserService {
         }
 
         foundUser.username = user.username
+
         const updateUser = await this._userRepository.save(foundUser)
+
+        await this._userDetailRepository.update(15, {name:user.name})
+        
         return plainToClass(ReadUserDto, updateUser)
     }
 
