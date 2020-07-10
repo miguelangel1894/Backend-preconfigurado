@@ -63,7 +63,7 @@ export class UserService {
 
         const updateUser = await this._userRepository.save(foundUser)
 
-        await this._userDetailRepository.update(15, {name:user.name})
+        await this._userDetailRepository.save({id:userId, name:user.name, lastname:user.lastname})
         
         return plainToClass(ReadUserDto, updateUser)
     }

@@ -14,8 +14,8 @@ export class UserController {
     ){}
 
     @Get(':userId')
-    /* @Roles(RoleType.ADMINISTRATOR)
-    @UseGuards(AuthGuard(), RoleGuard) */
+    @Roles(RoleType.ADMINISTRATOR)
+    @UseGuards(AuthGuard(), RoleGuard)
     getUser(@Param('userId', ParseIntPipe) userId:number): Promise<ReadUserDto>{
         return this._userService.get(userId)
     }
