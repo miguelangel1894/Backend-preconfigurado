@@ -7,14 +7,25 @@ import { UserModule } from './modules/user/user.module';
 import { RoleModule } from './modules/role/role.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BookModule } from './modules/book/book.module';
+import { StoreModule } from './modules/store/store.module';
+import { ProductModule } from './modules/product/product.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, UserModule, RoleModule, AuthModule, BookModule]
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    UserModule,
+    RoleModule,
+    AuthModule,
+    BookModule,
+    StoreModule,
+    ProductModule,
+  ],
 })
 export class AppModule {
-  static port: number | string
+  static port: number | string;
 
-  constructor(private readonly _configService: ConfigService){
-    AppModule.port = this._configService.get(Configuration.PORT)
+  constructor(private readonly _configService: ConfigService) {
+    AppModule.port = this._configService.get(Configuration.PORT);
   }
 }

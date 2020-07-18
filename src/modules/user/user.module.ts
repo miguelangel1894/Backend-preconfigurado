@@ -6,9 +6,15 @@ import { UserController } from './user.controller';
 import { AuthModule } from '../auth/auth.module';
 import { RoleRepository } from '../role/role.repository';
 import { UserDetailRepository } from "./user_details.repository";
+import { StoreRepository } from '../store/store.repository';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([UserRepository, RoleRepository, UserDetailRepository]), AuthModule],
+    imports: [
+        TypeOrmModule.forFeature([
+        UserRepository, 
+        RoleRepository, 
+        UserDetailRepository, 
+        StoreRepository]), AuthModule],
     providers: [UserService],
     controllers: [UserController]
 })
